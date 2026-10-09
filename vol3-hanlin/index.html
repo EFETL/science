@@ -1548,5 +1548,50 @@ secs.sort(function(a,b){return b.pri-a.pri});
 return secs.map(function(s){return{title:s.title,items:s.items}});
 });</script>
 <!-- /AK -->
+<!--subjbar--><script>
+/* ================= 📚 換科目小按鈕（國中段考闖關六站共用） =================
+   放在頁面最上方一排：國文／自然／英文／歷史／地理／公民。
+   在某個年級版本的頁面（例如 history.efetl.com/vol1-kangxuan/），按別科會直接跳到「同年級、同版本」那一頁；
+   那一科沒有這個版本時，就到該科首頁。本機測試可先設 window.EFETL_SUBJ_HERE='history'。 */
+(function(){
+  const S=[['chinese','📖','國文','#b6322a'],['science','🔬','自然','#1d6f5f'],['english','🔤','英文','#2b4c7e'],
+           ['history','🏺','歷史','#7a4a2a'],['geography','🌏','地理','#2f7a3a'],['civics','⚖️','公民','#1f4e8c']];
+  const V9=['vol1-hanlin','vol1-kangxuan','vol1-nanyi','vol3-hanlin','vol3-kangxuan','vol3-nanyi','vol5-hanlin','vol5-kangxuan','vol5-nanyi'];
+  const all=()=>Object.fromEntries(V9.map(k=>[k,k]));
+  /* 各站「年級版本 → 實際資料夾」；國文最早兩冊沒加版本名，英文目前只有八上南一 */
+  const PAGES={chinese:{...all(),'vol1-kangxuan':'vol1','vol3-hanlin':'vol3'},science:all(),english:{'vol3-nanyi':'jh8-exam1'},
+               history:all(),geography:all(),civics:all()};
+  const GN={vol1:'七上',vol3:'八上',vol5:'九上'},VN={hanlin:'翰林',kangxuan:'康軒',nanyi:'南一'};
+  const here=window.EFETL_SUBJ_HERE||location.hostname.split('.')[0];
+  const seg=(window.EFETL_SUBJ_SEG!=null?window.EFETL_SUBJ_SEG:location.pathname.split('/').filter(Boolean)[0])||'';
+  const map=PAGES[here]||{};
+  const key=Object.keys(map).find(k=>map[k]===seg)||'';
+  const [g,v]=key.split('-');
+  const css=`
+  #subjBar{background:#fff;border-bottom:1px solid #e6e2d8;padding:8px 12px;display:flex;gap:8px;align-items:center;justify-content:center;
+    overflow-x:auto;white-space:nowrap;scrollbar-width:none;font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;position:relative;z-index:5}
+  #subjBar::-webkit-scrollbar{display:none}
+  #subjBar .lab{font-size:20px;color:#66707c;font-weight:700;flex:none}
+  #subjBar a{flex:none;display:inline-flex;align-items:center;gap:4px;text-decoration:none;font-size:20px;font-weight:700;line-height:1.2;
+    padding:5px 12px;border-radius:99px;border:2px solid var(--sc);color:var(--sc);background:#fff;transition:transform .12s}
+  #subjBar a:hover{transform:translateY(-2px)}
+  #subjBar a.cur{background:var(--sc);color:#fff;pointer-events:none}
+  @media(max-width:640px){#subjBar{justify-content:flex-start}#subjBar .lab{display:none}}
+  @media print{#subjBar{display:none!important}}`;
+  const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+  const lab=key?`換科目（${GN[g]}・${VN[v]}）`:'換科目';
+  const links=S.map(([s,e,n,c])=>{
+    const to=key&&PAGES[s][key]?`${PAGES[s][key]}/`:'';
+    const tip=s===here?`目前在${n}`:(to?`到${n}・${GN[g]}${VN[v]}`:`到${n}首頁`);
+    return `<a href="https://${s}.efetl.com/${to}" style="--sc:${c}" class="${s===here?'cur':''}" title="${tip}">${e} ${n}</a>`;
+  }).join('');
+  const bar=document.createElement('div');bar.id='subjBar';bar.innerHTML=`<span class="lab">📚 ${lab}</span>${links}`;
+  document.body.prepend(bar);
+  /* 手機上一排放不下時，把目前的科目捲到中間（只捲這一排，不捲頁面） */
+  const c=bar.querySelector('a.cur');
+  if(c) requestAnimationFrame(()=>{bar.scrollLeft=c.offsetLeft-(bar.clientWidth-c.offsetWidth)/2});
+})();
+
+</script><!--/subjbar-->
 </body>
 </html>
