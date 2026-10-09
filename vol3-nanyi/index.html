@@ -887,12 +887,33 @@ const BGM={ctx:null,master:null,timer:null,playing:false,
 /* ================= 交卷給老師（雲端） =================
    後端：段考闖關成績（assets/v2/backend/Code.gs），不用班級碼；每個網站一個 subject、試算表一個分頁。
    round 編碼：單元代碼×10＋題型（0＝段考模擬題、1＝快問快答、2＝分類、3＝配對）；總測驗＝90。 */
+/* 姓名：每站 localStorage ＋ 整個 efetl.com 共用的 cookie。
+   一科填名字，其他科也認得；任一科按「登出」，所有科目一起登出（各站是不同網域，靠 efetl_logout 時間戳讓舊名字失效）。 */
+const efetlMe={
+  dom:/(^|\.)efetl\.com$/.test(location.hostname)?';domain=efetl.com':'',
+  ck(k){const m=document.cookie.match('(?:^|; )'+k+'=([^;]*)');return m?decodeURIComponent(m[1]):''},
+  setck(k,v,age){document.cookie=k+'='+encodeURIComponent(v)+';path=/;max-age='+age+';SameSite=Lax'+this.dom},
+  get(sub){
+    try{const c=this.ck('efetl_student');if(c){const o=JSON.parse(c);if(o&&o.name)return {name:o.name}}}catch(e){}
+    try{
+      const o=JSON.parse(localStorage.getItem(sub+'_student')||'null');if(!o||!o.name)return null;
+      const out=+this.ck('efetl_logout')||0;
+      if(out&&(o.t||0)<out){localStorage.removeItem(sub+'_student');localStorage.removeItem(sub+'_history');return null}
+      this.setck('efetl_student',JSON.stringify({name:o.name}),31536000);
+      return {name:o.name};
+    }catch(e){return null}
+  },
+  set(sub,o){try{localStorage.setItem(sub+'_student',JSON.stringify({name:o.name,t:Date.now()}))}catch(e){}
+    this.setck('efetl_student',JSON.stringify({name:o.name}),31536000)},
+  out(sub){try{localStorage.removeItem(sub+'_student');localStorage.removeItem(sub+'_history')}catch(e){}
+    this.setck('efetl_student','',0);this.setck('efetl_logout',String(Date.now()),31536000)}
+};
 const CLOUD={
   endpoint:'https://script.google.com/macros/s/AKfycbzPt9-_BdRtHhH6f6GAuE9LLRXK8m3j7uavDxpm0xaaJCitl2KfOoYcviYgDZNdNjflLg/exec',   /* 段考闖關成績後端（assets/v2/backend/Code.gs），不用班級碼 */
   subject:'sci8-nanyi-1',
   site:'自然 國二上第一次段考（南一）',   /* 試算表分頁名稱，例「英文 國二上第一次段考」 */
-  get me(){try{const o=JSON.parse(localStorage.getItem('sci8-nanyi-1_student')||'null');return o&&o.name?o:null}catch(e){return null}},
-  set me(o){try{localStorage.setItem('sci8-nanyi-1_student',JSON.stringify(o))}catch(e){}},
+  get me(){return efetlMe.get(this.subject)},
+  set me(o){efetlMe.set(this.subject,o)},
   upload(rec){
     const m=this.me;if(!m)return false;
     const body=Object.assign({name:m.name,subject:this.subject,site:this.site},rec);
@@ -907,11 +928,16 @@ function meChip(){
   $('#meEdit').onclick=()=>enroll(()=>{});
   /* 登出：同一台平板／電腦換下一位同學用。清掉這台裝置記住的姓名與交卷紀錄，馬上跳出填姓名視窗 */
   if($('#meOut'))$('#meOut').onclick=()=>{
-    if(!confirm(`要登出「${m.name}」嗎？\n登出後，下一位同學可以填自己的名字。`))return;
-    try{localStorage.removeItem(CLOUD.subject+'_student');localStorage.removeItem(CLOUD.subject+'_history')}catch(e){}
+    if(!confirm(`要登出「${m.name}」嗎？\n國文、自然、英文、歷史、地理、公民會一起登出，下一位同學可以填自己的名字。`))return;
+    efetlMe.out(CLOUD.subject);
     meChip();enroll(()=>{},true);
   };
 }
+/* 回到這個分頁時，如果在別科登出或換了人，馬上更新姓名 */
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible')return;
+  meChip();if(!CLOUD.me&&!document.getElementById('enr'))enroll(()=>{},true);
+});
 /* 填寫姓名視窗（只要中文姓名）；成功後呼叫 then() */
 function enroll(then,force){
   if(document.getElementById('enr'))return;
