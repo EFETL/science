@@ -1507,8 +1507,8 @@ return secs.map(function(s){return{title:s.title,items:s.items}});
            ['history','🏺','歷史','#7a4a2a'],['geography','🌏','地理','#2f7a3a'],['civics','⚖️','公民','#1f4e8c']];
   const V9=['vol1-hanlin','vol1-kangxuan','vol1-nanyi','vol3-hanlin','vol3-kangxuan','vol3-nanyi','vol5-hanlin','vol5-kangxuan','vol5-nanyi'];
   const all=()=>Object.fromEntries(V9.map(k=>[k,k]));
-  /* 各站「年級版本 → 實際資料夾」；國文最早兩冊沒加版本名，英文目前只有八上南一 */
-  const PAGES={chinese:{...all(),'vol1-kangxuan':'vol1','vol3-hanlin':'vol3'},science:all(),english:{'vol3-nanyi':'jh8-exam1'},
+  /* 各站「年級版本 → 實際資料夾」；國文最早兩冊沒加版本名；英文用 jh<年級>-版本，八上南一是 jh8-exam1 */
+  const PAGES={chinese:{...all(),'vol1-kangxuan':'vol1','vol3-hanlin':'vol3'},science:all(),english:{'vol1-hanlin':'jh7-hanlin','vol1-kangxuan':'jh7-kangxuan','vol1-nanyi':'jh7-nanyi','vol3-hanlin':'jh8-hanlin','vol3-kangxuan':'jh8-kangxuan','vol3-nanyi':'jh8-exam1','vol5-hanlin':'jh9-hanlin','vol5-kangxuan':'jh9-kangxuan','vol5-nanyi':'jh9-nanyi'},
                history:all(),geography:all(),civics:all()};
   const GN={vol1:'七上',vol3:'八上',vol5:'九上'},VN={hanlin:'翰林',kangxuan:'康軒',nanyi:'南一'};
   const here=window.EFETL_SUBJ_HERE||location.hostname.split('.')[0];
