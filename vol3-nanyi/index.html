@@ -903,8 +903,14 @@ const CLOUD={
 };
 function meChip(){
   const m=CLOUD.me,el=$('#me');if(!el)return;
-  el.innerHTML=m?`👤 ${esc(m.name)}<button class="linkbtn" id="meEdit">修改</button>`:`👤 尚未填寫姓名 <button class="linkbtn" id="meEdit">填寫</button>`;
+  el.innerHTML=m?`👤 ${esc(m.name)}<button class="linkbtn" id="meEdit">修改</button><button class="linkbtn" id="meOut">登出</button>`:`👤 尚未填寫姓名 <button class="linkbtn" id="meEdit">填寫</button>`;
   $('#meEdit').onclick=()=>enroll(()=>{});
+  /* 登出：同一台平板／電腦換下一位同學用。清掉這台裝置記住的姓名與交卷紀錄，馬上跳出填姓名視窗 */
+  if($('#meOut'))$('#meOut').onclick=()=>{
+    if(!confirm(`要登出「${m.name}」嗎？\n登出後，下一位同學可以填自己的名字。`))return;
+    try{localStorage.removeItem(CLOUD.subject+'_student');localStorage.removeItem(CLOUD.subject+'_history')}catch(e){}
+    meChip();enroll(()=>{},true);
+  };
 }
 /* 填寫姓名視窗（只要中文姓名）；成功後呼叫 then() */
 function enroll(then,force){
